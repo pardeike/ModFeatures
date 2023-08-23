@@ -10,10 +10,23 @@
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<Version>1.0.0.0</Version>
-		<Copyright>Copyright Andreas Pardeike</Copyright>
+		<Copyright>Ⓒ Andreas Pardeike</Copyright>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageId>Brrainz.RimWorld.ModFeatures</PackageId>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageIcon>Icon.png</PackageIcon>
+		<Description>This framework adds an automated 'new features' dialog to a RimWorld mod</Description>
 		<Nullable>disable</Nullable>
+		<Title>RimWorld ModFeatures</Title>
+		<Authors>pardeike</Authors>
+		<Company>Brrainz</Company>
+		<PackageProjectUrl>https://github.com/pardeike/RimWorld-ModFeatures</PackageProjectUrl>
+		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+		<RepositoryUrl>https://github.com/pardeike/RimWorld-ModFeatures</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>rimworld;mod;features;library</PackageTags>
+		<PackageReleaseNotes>Initial release</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -21,6 +34,7 @@
 		<Optimize>true</Optimize>
 		<DebugType>none</DebugType>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<NoWarn>1701;1702;NU5128</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -29,6 +43,7 @@
 		<Optimize>false</Optimize>
 		<DebugType>portable</DebugType>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<NoWarn>1701;1702;NU5128</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -43,9 +58,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="CODE_OF_CONDUCT.md" Pack="true" PackagePath="\"/>
-		<None Include="LICENSE" Pack="true" PackagePath="\"/>
-		<None Include="README.md" Pack="true" PackagePath="\"/>
+		<None Include="CODE_OF_CONDUCT.md" Pack="true" PackagePath="\" />
+		<None Include="LICENSE" Pack="true" PackagePath="\" />
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Icon.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
 	</ItemGroup>
 
 	<Target Name="MyCode" BeforeTargets="UpdateReferences">
