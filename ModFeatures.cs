@@ -29,7 +29,7 @@ namespace Brrainz
 				return;
 			}
 			var type = mods.Dequeue();
-			var dialog = new Dialog_ModFeatures(type, () => showNextDialog = true);
+			var dialog = new Dialog_ModFeatures(type, () => showNextDialog = true, false);
 			if (dialog.TopicCount > 0)
 				Find.WindowStack.Add(dialog);
 			showNextDialog = false;
@@ -60,14 +60,14 @@ namespace Brrainz
 		public static int UnseenFeatures<T>() where T : Mod
 		{
 			var type = typeof(T);
-			var dialog = new Dialog_ModFeatures(type, null);
+			var dialog = new Dialog_ModFeatures(type, null, false);
 			return dialog.TopicCount;
 		}
 
-		public static void ShowAgain<T>() where T : Mod
+		public static void ShowAgain<T>(bool showAll) where T : Mod
 		{
 			var type = typeof(T);
-			var dialog = new Dialog_ModFeatures(type, null);
+			var dialog = new Dialog_ModFeatures(type, null, showAll);
 			Find.WindowStack.Add(dialog);
 		}
 	}
@@ -104,6 +104,7 @@ namespace Brrainz
 
 		readonly string modName;
 		readonly Action closeCallback;
+		readonly bool showAll;
 		readonly string configurationPath;
 		readonly string resourceDir;
 
@@ -118,7 +119,7 @@ namespace Brrainz
 		string TopicPath(int i) => $"{resourceDir}{Path.DirectorySeparatorChar}{topicResources[i]}";
 		public override Vector2 InitialSize => new Vector2(listWidth + videoWidth + margin * 3, videoHeight + titleHeight + margin * 3);
 
-		internal Dialog_ModFeatures(Type type, Action closeCallback)
+		internal Dialog_ModFeatures(Type type, Action closeCallback, bool showAll)
 		{
 			doCloseX = true;
 			forcePause = true;
@@ -128,6 +129,7 @@ namespace Brrainz
 
 			modName = type.Name;
 			this.closeCallback = closeCallback;
+			this.showAll = showAll;
 
 			var modContentPack = LoadedModManager.RunningMods.FirstOrDefault(mod => mod.assemblies.loadedAssemblies.Contains(type.Assembly));
 			var rootDir = modContentPack?.RootDir;
@@ -148,7 +150,7 @@ namespace Brrainz
 		{
 			topicResources = Directory.GetFiles(resourceDir)
 				.Select(f => Path.GetFileName(f))
-				.Where(topic => configuration.IsDismissed(topic) == false)
+				.Where(topic => showAll || configuration.IsDismissed(topic) == false)
 				.ToArray();
 			topicTextures = new Texture2D[topicResources.Length];
 		}
@@ -274,7 +276,7 @@ namespace Brrainz
 				Widgets.Label(r.RightPartPixels(r.width - margin), TopicTranslated(i));
 				Text.Anchor = anchor;
 				r = r.RightPartPixels(rowHeight).ExpandedBy(-titleHeight / 2);
-				if (Widgets.ButtonImage(r, MainTabWindow_Quests.DismissIcon))
+				if (showAll == false && Widgets.ButtonImage(r, MainTabWindow_Quests.DismissIcon))
 				{
 					configuration.MarkDismissed(topicResources[i], () => Save());
 					currentTexture = null;

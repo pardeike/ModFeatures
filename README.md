@@ -32,10 +32,11 @@ You can also trigger the dialog again by calling
 using Brrainz;
 
 // don't call this at startup, only on demand by the user
+var showAllFeatures = true;
 var unseen = ModFeatures.UnseenFeatures<YourModClass>();
-if (unseen > 0)
+if (unseen > 0 || showAllFeatures)
 {
-	 ModFeatures.ShowAgain<YourModClass>();
+   ModFeatures.ShowAgain<YourModClass>(showAllFeatures);
 }
 ```
 
