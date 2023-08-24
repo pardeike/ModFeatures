@@ -223,11 +223,15 @@ namespace Brrainz
 				return;
 			}
 
-			currentTexture = renderTexture;
+			RenderTexture.active = renderTexture;
+			GL.Clear(true, true, Color.black);
+			RenderTexture.active = null;
+
 			videoPlayer.Stop();
 			videoPlayer.url = path;
 			videoPlayer.frame = 0;
 			videoPlayer.Play();
+			currentTexture = renderTexture;
 		}
 
 		static readonly Color[] frameColors = new[] { Color.yellow.ToTransparent(0.2f), Color.yellow.ToTransparent(0.3f), Color.white.ToTransparent(0.3f), Color.white.ToTransparent(0.4f) };
