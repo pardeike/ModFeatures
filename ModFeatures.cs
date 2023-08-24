@@ -56,6 +56,20 @@ namespace Brrainz
 
 			mods.Enqueue(typeof(T));
 		}
+
+		public static int UnseenFeatures<T>() where T : Mod
+		{
+			var type = typeof(T);
+			var dialog = new Dialog_ModFeatures(type, null);
+			return dialog.TopicCount;
+		}
+
+		public static void ShowAgain<T>() where T : Mod
+		{
+			var type = typeof(T);
+			var dialog = new Dialog_ModFeatures(type, null);
+			Find.WindowStack.Add(dialog);
+		}
 	}
 
 	internal class Dialog_ModFeatures : Window
@@ -202,7 +216,7 @@ namespace Brrainz
 		public override void PostClose()
 		{
 			base.PostClose();
-			closeCallback();
+			closeCallback?.Invoke();
 		}
 
 		public void ShowTopic(int i)
