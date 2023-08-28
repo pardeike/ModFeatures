@@ -16,7 +16,7 @@ namespace Brrainz
 	public static class ModFeatures
 	{
 		const string modFeatureId = "brrainz.mod.features";
-		static Queue<Type> mods = new Queue<Type>();
+		static Queue<Type> mods = new();
 		static bool showNextDialog = false;
 
 		static void Root_Update_Postfix()
@@ -108,16 +108,24 @@ namespace Brrainz
 		readonly string configurationPath;
 		readonly string resourceDir;
 
-		int selected = 0;
+		static readonly Texture2D[] frameColors = new[] {
+			SolidColorMaterials.NewSolidColorTexture(Color.yellow.ToTransparent(0.2f)),
+			SolidColorMaterials.NewSolidColorTexture(Color.yellow.ToTransparent(0.3f)),
+			SolidColorMaterials.NewSolidColorTexture(Color.white.ToTransparent(0.3f)),
+			SolidColorMaterials.NewSolidColorTexture(Color.white.ToTransparent(0.4f))
+		};
+		static readonly Color[] bgColors = new[] { Color.yellow.ToTransparent(0.05f), Color.yellow.ToTransparent(0.1f), Color.white.ToTransparent(0.15f), Color.white.ToTransparent(0.2f) };
+
+		int selected = -1;
 		string title = "";
-		Configuration configuration = new Configuration();
+		Configuration configuration = new();
 		string[] topicResources;
 		Texture2D[] topicTextures;
 
 		string TopicTranslated(int i) => $"Feature_{modName}_{topicResources[i].Substring(3).Replace(".png", "").Replace(".mp4", "")}".Translate();
 		string TopicType(int i) => topicResources[i].EndsWith(".png") ? "image" : "video";
 		string TopicPath(int i) => $"{resourceDir}{Path.DirectorySeparatorChar}{topicResources[i]}";
-		public override Vector2 InitialSize => new Vector2(listWidth + videoWidth + margin * 3, videoHeight + titleHeight + margin * 3);
+		public override Vector2 InitialSize => new(listWidth + videoWidth + margin * 3, videoHeight + titleHeight + margin * 3);
 
 		internal Dialog_ModFeatures(Type type, Action closeCallback, bool showAll)
 		{
@@ -132,9 +140,7 @@ namespace Brrainz
 			this.showAll = showAll;
 
 			var modContentPack = LoadedModManager.RunningMods.FirstOrDefault(mod => mod.assemblies.loadedAssemblies.Contains(type.Assembly));
-			var rootDir = modContentPack?.RootDir;
-			if (rootDir == null)
-				throw new Exception($"Could not find root mod directory for {type.Assembly.FullName}");
+			var rootDir = (modContentPack?.RootDir) ?? throw new Exception($"Could not find root mod directory for {type.Assembly.FullName}");
 			resourceDir = $"{rootDir}{Path.DirectorySeparatorChar}Features";
 			var folderPath = Path.Combine(GenFilePaths.ConfigFolderPath, "ModFeatures");
 			if (Directory.Exists(folderPath) == false)
@@ -250,8 +256,6 @@ namespace Brrainz
 			currentTexture = renderTexture;
 		}
 
-		static readonly Color[] frameColors = new[] { Color.yellow.ToTransparent(0.2f), Color.yellow.ToTransparent(0.3f), Color.white.ToTransparent(0.3f), Color.white.ToTransparent(0.4f) };
-		static readonly Color[] bgColors = new[] { Color.yellow.ToTransparent(0.05f), Color.yellow.ToTransparent(0.1f), Color.white.ToTransparent(0.15f), Color.white.ToTransparent(0.2f) };
 		public override void DoWindowContents(Rect inRect)
 		{
 			var font = Text.Font;
@@ -270,7 +274,7 @@ namespace Brrainz
 				var r = new Rect(0f, (rowHeight + rowSpacing) * i, viewRect.width, rowHeight);
 				var hover = Mouse.IsOver(r) ? 1 : 0;
 				Widgets.DrawBoxSolid(r, bgColors[hover + (selected == i ? 2 : 0)]);
-				Widgets.DrawBox(r, 1, SolidColorMaterials.NewSolidColorTexture(frameColors[hover + (selected == i ? 2 : 0)]));
+				Widgets.DrawBox(r, 1, frameColors[hover + (selected == i ? 2 : 0)]);
 				var anchor = Text.Anchor;
 				Text.Anchor = TextAnchor.MiddleLeft;
 				Widgets.Label(r.RightPartPixels(r.width - margin), TopicTranslated(i));
