@@ -108,12 +108,7 @@ namespace Brrainz
 		readonly string configurationPath;
 		readonly string resourceDir;
 
-		static readonly Texture2D[] frameColors = new[] {
-			SolidColorMaterials.NewSolidColorTexture(Color.yellow.ToTransparent(0.2f)),
-			SolidColorMaterials.NewSolidColorTexture(Color.yellow.ToTransparent(0.3f)),
-			SolidColorMaterials.NewSolidColorTexture(Color.white.ToTransparent(0.3f)),
-			SolidColorMaterials.NewSolidColorTexture(Color.white.ToTransparent(0.4f))
-		};
+		static Texture2D[] frameColors = null;
 		static readonly Color[] bgColors = new[] { Color.yellow.ToTransparent(0.05f), Color.yellow.ToTransparent(0.1f), Color.white.ToTransparent(0.15f), Color.white.ToTransparent(0.2f) };
 
 		int selected = -1;
@@ -258,6 +253,13 @@ namespace Brrainz
 
 		public override void DoWindowContents(Rect inRect)
 		{
+			frameColors ??= new[] {
+				SolidColorMaterials.NewSolidColorTexture(Color.yellow.ToTransparent(0.2f)),
+				SolidColorMaterials.NewSolidColorTexture(Color.yellow.ToTransparent(0.3f)),
+				SolidColorMaterials.NewSolidColorTexture(Color.white.ToTransparent(0.3f)),
+				SolidColorMaterials.NewSolidColorTexture(Color.white.ToTransparent(0.4f))
+			};
+
 			var font = Text.Font;
 			var titleRect = new Rect(listWidth + margin, 0f, inRect.width - listWidth - margin, titleHeight);
 			Text.Font = GameFont.Medium;
