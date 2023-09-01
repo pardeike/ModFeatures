@@ -75,10 +75,14 @@ namespace Brrainz
 	[StaticConstructorOnStartup]
 	internal class Dialog_ModFeatures : Window
 	{
-		const float listWidth = 280;
 		const float videoWidth = 640;
 		const float videoHeight = 480;
 		const float margin = 20;
+		const float buttonSpacing = 4;
+		const float rowHeightFactor = 2f;
+		const int topicCountBeforeScroll = 9;
+		const int trashScalerStart = 300;
+		const int trashScalerPeriod = 240;
 
 		[DataContract]
 		class Configuration
@@ -100,7 +104,7 @@ namespace Brrainz
 		Vector2 scrollPosition;
 		Texture currentTexture;
 		RenderTexture renderTexture;
-		float titleHeight;
+		float titleHeight, textHeight;
 		VideoPlayer videoPlayer;
 
 		readonly string modName;
@@ -122,11 +126,33 @@ namespace Brrainz
 		Configuration configuration = new();
 		string[] topicResources;
 		Texture2D[] topicTextures;
+		float listWidthCached = -1;
+		int ticks;
 
 		string TopicTranslated(int i) => $"Feature_{modName}_{topicResources[i].Substring(3).Replace(".png", "").Replace(".mp4", "")}".Translate();
 		string TopicType(int i) => topicResources[i].EndsWith(".png") ? "image" : "video";
 		string TopicPath(int i) => $"{resourceDir}{Path.DirectorySeparatorChar}{topicResources[i]}";
-		public override Vector2 InitialSize => new(listWidth + videoWidth + margin * 3, videoHeight + titleHeight + margin * 3);
+		bool HasScrollbar => topicResources.Length > topicCountBeforeScroll;
+		float ListWidth
+		{
+			get
+			{
+				if (listWidthCached < 0)
+				{
+					Text.Font = GameFont.Small;
+					for (var i = 0; i < topicResources.Length; i++)
+					{
+						var width = Text.CalcSize(TopicTranslated(i)).x;
+						listWidthCached = Mathf.Max(listWidthCached, width);
+					}
+					listWidthCached += margin * 2 + buttonSpacing + textHeight * rowHeightFactor;
+					if (HasScrollbar)
+						listWidthCached += 20;
+				}
+				return listWidthCached;
+			}
+		}
+		public override Vector2 InitialSize => new(ListWidth + videoWidth + margin * 3, videoHeight + titleHeight + margin * 3);
 
 		internal Dialog_ModFeatures(Type type, Action closeCallback, bool showAll)
 		{
@@ -139,6 +165,7 @@ namespace Brrainz
 			modName = type.Name;
 			this.closeCallback = closeCallback;
 			this.showAll = showAll;
+			ticks = -trashScalerStart;
 
 			var modContentPack = LoadedModManager.RunningMods.FirstOrDefault(mod => mod.assemblies.loadedAssemblies.Contains(type.Assembly));
 			var rootDir = (modContentPack?.RootDir) ?? throw new Exception($"Could not find root mod directory for {type.Assembly.FullName}");
@@ -200,6 +227,8 @@ namespace Brrainz
 		{
 			Text.Font = GameFont.Medium;
 			titleHeight = Text.CalcHeight(title, 10000);
+			Text.Font = GameFont.Small;
+			textHeight = Text.CalcHeight("#", 10000);
 			renderTexture = new RenderTexture((int)videoWidth, (int)videoHeight, 24, RenderTextureFormat.ARGB32);
 			videoPlayer = Find.Camera.gameObject.AddComponent<VideoPlayer>();
 			videoPlayer = Find.Root.gameObject.AddComponent<VideoPlayer>();
@@ -257,48 +286,75 @@ namespace Brrainz
 			currentTexture = renderTexture;
 		}
 
+		public float TrashScaler(int idx)
+		{
+			ticks++;
+			if (ticks < 0)
+				return 4f;
+			var start = trashScalerPeriod * idx;
+			var f = GenMath.LerpDoubleClamped(start, start + 2 * trashScalerPeriod, 0, 2f, ticks);
+			if (f < 1f)
+				return 4f + 4 * f;
+			else
+				return 4f + 4 * (2 - f);
+		}
+
 		public override void DoWindowContents(Rect inRect)
 		{
 			var font = Text.Font;
-			var titleRect = new Rect(listWidth + margin, 0f, inRect.width - listWidth - margin, titleHeight);
+			var titleRect = new Rect(ListWidth + margin, 0f, inRect.width - ListWidth - margin, titleHeight);
 			Text.Font = GameFont.Medium;
 			Widgets.Label(titleRect, title);
 			Text.Font = GameFont.Small;
 
-			var rowHeight = titleHeight * 2;
-			var rowSpacing = titleHeight / 2;
-			var hasScrollbar = topicResources.Length > 7;
-			var viewRect = new Rect(0f, 0f, listWidth - (hasScrollbar ? 20 : 0), (rowHeight + rowSpacing) * topicResources.Length - rowSpacing);
-			Widgets.BeginScrollView(new Rect(0f, 0f, listWidth, inRect.height), ref scrollPosition, viewRect, true);
+			var rowHeight = textHeight * rowHeightFactor;
+			var rowSpacing = rowHeight / 2.7f;
+			var viewRect = new Rect(0f, 0f, ListWidth - (HasScrollbar ? 20 : 0), (rowHeight + rowSpacing) * topicResources.Length - rowSpacing);
+			Widgets.BeginScrollView(new Rect(0f, 0f, ListWidth, inRect.height), ref scrollPosition, viewRect, true);
 			for (var i = 0; i < topicResources.Length; i++)
 			{
-				var r = new Rect(0f, (rowHeight + rowSpacing) * i, viewRect.width, rowHeight);
-				var hover = Mouse.IsOver(r) ? 1 : 0;
-				Widgets.DrawBoxSolid(r, bgColors[hover + (selected == i ? 2 : 0)]);
-				Widgets.DrawBox(r, 1, frameColors[hover + (selected == i ? 2 : 0)]);
+				var r1 = new Rect(0f, (rowHeight + rowSpacing) * i, viewRect.width - (showAll ? 0 : buttonSpacing + rowHeight), rowHeight);
+
+				var hover = Mouse.IsOver(r1) ? 1 : 0;
+				Widgets.DrawBoxSolid(r1, bgColors[hover + (selected == i ? 2 : 0)]);
+				Widgets.DrawBox(r1, 1, frameColors[hover + (selected == i ? 2 : 0)]);
 				var anchor = Text.Anchor;
 				Text.Anchor = TextAnchor.MiddleLeft;
-				Widgets.Label(r.RightPartPixels(r.width - margin), TopicTranslated(i));
+				var labelRect = r1;
+				labelRect.x += margin;
+				labelRect.width -= 2 * margin;
+				Widgets.Label(labelRect, TopicTranslated(i));
 				Text.Anchor = anchor;
-				r = r.RightPartPixels(rowHeight).ExpandedBy(-titleHeight / 2);
-				if (showAll == false && Widgets.ButtonImage(r, MainTabWindow_Quests.DismissIcon))
-				{
-					configuration.MarkDismissed(topicResources[i], () => Save());
-					currentTexture = null;
-					title = "";
-					selected = -1;
-					ReloadTextures();
-					if (TopicCount == 0)
-						Close();
-				}
-				else if (hover == 1 && Mouse.IsOver(r) == false && Input.GetMouseButton(0))
+				if (Widgets.ButtonInvisible(r1))
 					ShowTopic(i);
+
+				if (showAll == false)
+				{
+					var r2 = new Rect(r1.xMax + buttonSpacing, (rowHeight + rowSpacing) * i, rowHeight, rowHeight);
+
+					if (Widgets.ButtonInvisible(r2))
+					{
+						configuration.MarkDismissed(topicResources[i], () => Save());
+						currentTexture = null;
+						title = "";
+						selected = -1;
+						ReloadTextures();
+						if (TopicCount == 0)
+							Close();
+					}
+
+					hover = Mouse.IsOver(r2) ? 1 : 0;
+					Widgets.DrawBoxSolid(r2, bgColors[hover + (selected == i ? 2 : 0)]);
+					Widgets.DrawBox(r2, 1, frameColors[hover + (selected == i ? 2 : 0)]);
+					r2 = r2.ExpandedBy(-rowHeight / TrashScaler(i));
+					Widgets.DrawTextureFitted(r2, MainTabWindow_Quests.DismissIcon, 1f);
+				}
 			}
 			Widgets.EndScrollView();
 
 			if (currentTexture != null)
 			{
-				var previewRect = new Rect(listWidth + margin, titleHeight + margin, videoWidth, videoHeight);
+				var previewRect = new Rect(ListWidth + margin, titleHeight + margin, videoWidth, videoHeight);
 				Widgets.DrawBoxSolid(previewRect, Color.black);
 				GUI.DrawTexture(previewRect, currentTexture);
 			}
