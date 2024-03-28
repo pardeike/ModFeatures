@@ -87,7 +87,7 @@ namespace Brrainz
 		[DataContract]
 		class Configuration
 		{
-			[DataMember] string[] Dismissed { get; set; } = new string[0];
+			[DataMember] string[] Dismissed { get; set; } = [];
 
 			internal bool IsDismissed(string topic) => Dismissed.Contains(topic);
 
@@ -95,7 +95,7 @@ namespace Brrainz
 			{
 				if (IsDismissed(topic) == false)
 				{
-					Dismissed = Dismissed.Concat(new[] { topic }).ToArray();
+					Dismissed = [.. Dismissed, .. new[] { topic }];
 					saveCallback();
 				}
 			}
@@ -113,13 +113,13 @@ namespace Brrainz
 		readonly string configurationPath;
 		readonly string resourceDir;
 
-		static readonly Texture2D[] frameColors = new[] {
+		static readonly Texture2D[] frameColors = [
 			SolidColorMaterials.NewSolidColorTexture(Color.yellow.ToTransparent(0.2f)),
 			SolidColorMaterials.NewSolidColorTexture(Color.yellow.ToTransparent(0.3f)),
 			SolidColorMaterials.NewSolidColorTexture(Color.white.ToTransparent(0.3f)),
 			SolidColorMaterials.NewSolidColorTexture(Color.white.ToTransparent(0.4f))
-		};
-		static readonly Color[] bgColors = new[] { Color.yellow.ToTransparent(0.05f), Color.yellow.ToTransparent(0.1f), Color.white.ToTransparent(0.15f), Color.white.ToTransparent(0.2f) };
+		];
+		static readonly Color[] bgColors = [Color.yellow.ToTransparent(0.05f), Color.yellow.ToTransparent(0.1f), Color.white.ToTransparent(0.15f), Color.white.ToTransparent(0.2f)];
 
 		int selected = -1;
 		string title = "";
@@ -177,13 +177,14 @@ namespace Brrainz
 			configurationPath = Path.Combine(folderPath, filename);
 
 			Load();
-			ReloadTextures();
+			ReloadTopicsAndTextures();
 		}
 
-		public void ReloadTextures()
+		public void ReloadTopicsAndTextures()
 		{
 			topicResources = Directory.GetFiles(resourceDir)
 				.Select(f => Path.GetFileName(f))
+				.OrderBy(f => f)
 				.Where(topic => showAll || configuration.IsDismissed(topic) == false)
 				.ToArray();
 			topicTextures = new Texture2D[topicResources.Length];
@@ -338,7 +339,7 @@ namespace Brrainz
 						currentTexture = null;
 						title = "";
 						selected = -1;
-						ReloadTextures();
+						ReloadTopicsAndTextures();
 						if (TopicCount == 0)
 							Close();
 					}

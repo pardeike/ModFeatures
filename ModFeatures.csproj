@@ -9,7 +9,7 @@
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<Version>1.2.5.0</Version>
+		<Version>1.2.6.0</Version>
 		<Copyright>Ⓒ Andreas Pardeike</Copyright>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageId>Brrainz.RimWorld.ModFeatures</PackageId>
@@ -47,8 +47,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Krafs.Rimworld.Ref" Version="1.5.4033-beta" GeneratePathProperty="true" />
-		<PackageReference Include="Lib.Harmony" Version="2.3.1.1" ExcludeAssets="runtime" />
+		<PackageReference Include="Krafs.Rimworld.Ref" Version="1.5.4046-beta" GeneratePathProperty="true" />
+		<PackageReference Include="Lib.Harmony" Version="2.3.2" ExcludeAssets="runtime" />
 		<PackageReference Include="Microsoft.NETCore.Platforms" Version="7.0.4" />
 		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net472" Version="1.0.3">
 			<PrivateAssets>all</PrivateAssets>
